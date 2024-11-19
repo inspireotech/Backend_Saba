@@ -35,7 +35,7 @@ ENCODED_CREDENTIALS = os.getenv("GOOGLE_CREDENTIALS")
 if not API_KEY_NAME or not API_KEY or not GOOGLE_SHEET_NAME or not ENCODED_CREDENTIALS:
     raise RuntimeError("One or more required environment variables are missing!")
 
-MARKETPLACE = Marketplace.US
+MARKETPLACE = Marketplace.CA
 client = Client(api_key_name=API_KEY_NAME, api_key=API_KEY, marketplace=MARKETPLACE)
 
 # Decode credentials directly in memory
