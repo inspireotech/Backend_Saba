@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+jungle-scout-automation-c9fe07ca9232.json
