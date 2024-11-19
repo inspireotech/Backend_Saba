@@ -8,10 +8,13 @@ from junglescout import Client
 from junglescout.models.parameters.marketplace import Marketplace
 from dotenv import load_dotenv
 import os
+import base64
+import json
 
+# Load environment variables
+load_dotenv()
 
 app = FastAPI()
-
 
 # Add CORS middleware
 app.add_middleware(
@@ -23,24 +26,30 @@ app.add_middleware(
 )
 
 # Jungle Scout and Google Sheets configuration
-load_dotenv() 
 API_KEY_NAME = os.getenv("API_KEY_NAME")
 API_KEY = os.getenv("API_KEY")
 GOOGLE_SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME")
-CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
-MARKETPLACE = Marketplace.US
+ENCODED_CREDENTIALS = os.getenv("GOOGLE_CREDENTIALS")
 
+if not API_KEY_NAME or not API_KEY or not GOOGLE_SHEET_NAME or not ENCODED_CREDENTIALS:
+    raise RuntimeError("One or more required environment variables are missing!")
+
+# Decode and save the credentials file from the Base64 string
+DECODED_CREDENTIALS_FILE = "decoded_credentials.json"
+with open(DECODED_CREDENTIALS_FILE, "w") as f:
+    f.write(base64.b64decode(ENCODED_CREDENTIALS).decode())
+
+CREDENTIALS_FILE = DECODED_CREDENTIALS_FILE
+MARKETPLACE = Marketplace.US
 client = Client(api_key_name=API_KEY_NAME, api_key=API_KEY, marketplace=MARKETPLACE)
 
 # Log buffer
 log_buffer: List[str] = []
 
-
 def log_message(message: str):
     """Helper to add logs to the log buffer."""
     log_buffer.append(message)
     print(message)  # Still print to console for debugging
-
 
 @app.get("/logs")
 def get_logs():
@@ -50,10 +59,8 @@ def get_logs():
     log_buffer = []  # Clear logs after sending
     return {"logs": logs_to_return}
 
-
 class AutomationRequest(BaseModel):
     update_mode: str  # "all" or "new"
-
 
 # Helper function to connect to Google Sheets
 def connect_to_google_sheets():
@@ -63,17 +70,14 @@ def connect_to_google_sheets():
     sheet = client_gs.open(GOOGLE_SHEET_NAME).sheet1
     return sheet
 
-
 # Helper function for safe attribute fetching
 def safe_getattr(obj, attr, default=0):
     value = getattr(obj, attr, default)
     return value if isinstance(value, (int, float, str)) else default
 
-
 # Helper function to check if a row is empty
 def is_row_empty(row_data):
     return all(not cell for cell in row_data[1:])  # Skip the 'Keyword' column
-
 
 # Fetch keyword insights and update Google Sheets
 def fetch_keyword_insights(sheet, keyword, row_index):
@@ -104,7 +108,6 @@ def fetch_keyword_insights(sheet, keyword, row_index):
 
     except Exception as e:
         log_message(f"Error fetching keyword insights for {keyword}: {e}")
-
 
 # Fetch product data and update Google Sheets
 def fetch_product_data(sheet, keyword, row_index):
@@ -165,7 +168,6 @@ def fetch_product_data(sheet, keyword, row_index):
 
     except Exception as e:
         log_message(f"Error fetching product data for {keyword}: {e}")
-
 
 @app.post("/run-automation")
 def run_automation(request: AutomationRequest):

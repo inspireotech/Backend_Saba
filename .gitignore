@@ -1,5 +1,32 @@
+# Environment variables
+.env
+
+# Compiled files
 __pycache__/
+*.py[cod]
+
+# Byte-compiled / optimized / DLL files
 *.pyc
 *.pyo
-.env
-jungle-scout-automation-c9fe07ca9232.json
+*.pyd
+
+# Virtual environment folder
+venv/
+.env/
+
+# Sensitive credential files
+*.json
+encoded_credentials.txt
+
+# IDE or editor specific files
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+*.temp
+*.bak
+
+# Ignore specific OS files
+.DS_Store
+Thumbs.db
